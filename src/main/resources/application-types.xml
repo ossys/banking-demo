@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="banking_data_csv" format="csv">
+      <types:shape format="weave" example="examples/banking.csv"><![CDATA[%dw 2.0
+type banking_data_csv = Array<{|
+  age: Number, 
+  job: String, 
+  marital: String, 
+  education: String, 
+  "default": String, 
+  housing: String, 
+  loan: String, 
+  contact: String, 
+  month: String, 
+  day_of_week: String, 
+  duration: String, 
+  campaign: String, 
+  pdays: String, 
+  previous: String, 
+  poutcome: String, 
+  emp_var_rate: String, 
+  cons_price_idx: String, 
+  cons_conf_idx: String, 
+  euribor3m: String, 
+  nr_employed: String, 
+  y: String
+|}> {"MetadataFormat": "csv"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+    <types:type name="banking_data_batch_csv" format="csv">
+      <types:shape format="weave" example="examples/banking-batch.csv"><![CDATA[%dw 2.0
+type banking_data_batch_csv = Array<{|
+  age: String, 
+  job: String, 
+  marital: String, 
+  education: String, 
+  "default": String, 
+  housing: String, 
+  loan: String, 
+  contact: String, 
+  month: String, 
+  day_of_week: String, 
+  duration: String, 
+  campaign: String, 
+  pdays: String, 
+  previous: String, 
+  poutcome: String, 
+  emp_var_rate: String, 
+  cons_price_idx: String, 
+  cons_conf_idx: String, 
+  euribor3m: String, 
+  nr_employed: String
+|}> {"MetadataFormat": "csv"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#6da1d015-3770-472d-8147-788f15c97476">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="banking_data_csv"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="banking_data_csv"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#14a0e299-db4c-4616-a2a3-b9816c81edc8">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="banking_data_batch_csv"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="banking_data_batch_csv"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

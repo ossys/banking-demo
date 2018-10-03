@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="d3954b87-2095-4558-9cbb-033c38fede8d" >
+		<file:connection workingDir="/Users/ccravens/Business/ossys/Clients/AirForce/SupplyChainMachineLearning/src/banking-demo" />
+	</file:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="3e06cb1c-9bd0-4608-b47a-0dbe7a50cf0a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<sftp:config name="SFTP_Config" doc:name="SFTP Config" doc:id="b53f49aa-82dc-40c4-8839-35b8983fba9f" >
+		<sftp:connection host="afml.ossys.com" username="sftpuser" password="ossys2018!!" workingDir="/sftpuser/data"/>
+	</sftp:config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="b85c7366-38cd-4a33-b015-838598c19cbe" >
+		<db:my-sql-connection host="127.0.0.1" port="3306" user="afml" password="afml" database="afml" />
+	</db:config>
+	<flow name="loadBankingDataFlow" doc:id="86c2b217-5e28-47f5-8f0b-11ca683ff1a3" >
+		<http:listener doc:name="Listener" doc:id="129d895e-e5e1-49f3-9b75-5cd71a88685d" config-ref="HTTP_Listener_config" path="/load">
+			<http:response >
+				<http:body ><![CDATA[Success]]></http:body>
+			</http:response>
+		</http:listener>
+		<db:select doc:name="Select" doc:id="c27f986f-ce36-4fd0-ac09-b1e2afd00899" config-ref="Database_Config">
+			<db:sql >SELECT *
+FROM banking</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="6da1d015-3770-472d-8147-788f15c97476" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv headerLineNumber = 0 , header = true
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	age: payload01.age,
+	job: payload01.job,
+	marital: payload01.marital,
+	education: payload01.education,
+	"default": payload01."default",
+	housing: payload01.housing,
+	loan: payload01.loan,
+	contact: payload01.contact,
+	month: payload01.month,
+	day_of_week: payload01.day_of_week,
+	duration: payload01.duration,
+	campaign: payload01.campaign,
+	pdays: payload01.pdays,
+	previous: payload01.previous,
+	poutcome: payload01.poutcome,
+	emp_var_rate: payload01.emp_var_rate,
+	cons_price_idx: payload01.cons_price_idx,
+	cons_conf_idx: payload01.cons_conf_idx,
+	euribor3m: payload01.euribor3m,
+	nr_employed: payload01.nr_employed,
+	y: payload01.y
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<sftp:write doc:name="SFTP Write" doc:id="d24a4ead-6ff6-47b6-89fa-1c83224e4fc8" config-ref="SFTP_Config" path="banking-data.csv" createParentDirectories="false"/>
+	</flow>
+	<flow name="loadBatchDataFlow" doc:id="959a87e4-1899-4613-a43d-7e74ef2aed08" >
+		<http:listener doc:name="HTTP" doc:id="1653a0d4-e520-43d1-b745-c000df4a95c7" config-ref="HTTP_Listener_config" path="/loadBatch" >
+			<http:response >
+				<http:body ><![CDATA[Success]]></http:body>
+			</http:response>
+		</http:listener>
+		<file:read doc:name="File Read" doc:id="7905ff89-30b8-454f-b862-13a4e5c3f33b" config-ref="File_Config" path="/Users/ccravens/Business/ossys/Clients/AirForce/SupplyChainMachineLearning/src/banking-demo/data/banking-batch.csv" outputMimeType="application/csv" />
+		<ee:transform doc:name="Transform Message" doc:id="14a0e299-db4c-4616-a2a3-b9816c81edc8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv headerLineNumber = 0 , header = true
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	age: payload01.age,
+	job: payload01.job,
+	marital: payload01.marital,
+	education: payload01.education,
+	"default": payload01."default",
+	housing: payload01.housing,
+	loan: payload01.loan,
+	contact: payload01.contact,
+	month: payload01.month,
+	day_of_week: payload01.day_of_week,
+	duration: payload01.duration,
+	campaign: payload01.campaign,
+	pdays: payload01.pdays,
+	previous: payload01.previous,
+	poutcome: payload01.poutcome,
+	emp_var_rate: payload01.emp_var_rate,
+	cons_price_idx: payload01.cons_price_idx,
+	cons_conf_idx: payload01.cons_conf_idx,
+	euribor3m: payload01.euribor3m,
+	nr_employed: payload01.nr_employed,
+	y: payload01.y
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<sftp:write doc:name="SFTP Write" doc:id="a1e8a905-ff23-4734-a068-3418457b3159" config-ref="SFTP_Config" path="banking-data-batch.csv" createParentDirectories="false" />
+	</flow>
+</mule>
